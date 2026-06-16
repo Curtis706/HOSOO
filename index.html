@@ -1,0 +1,1577 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>細尾 HOSOO · 西陣織の産業轉型</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@300;400;500;600&family=Noto+Serif+SC:wght@300;400;500;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* ============ 主题色(🍂 牛皮纸) ============ */
+    --ink:#2a1e13;
+    --ink-rgb:42,30,19;
+    --paper:#eedfc7;
+    --paper-rgb:238,223,199;
+    --paper-tint:#e0d0b6;
+    --ink-tint:#3a2a1d;
+
+    /* ============ 字体(跨主题固定) ============ */
+    --mono:"IBM Plex Mono",ui-monospace,monospace;
+    --serif-en:"Playfair Display","Source Serif 4",Georgia,serif;
+    --serif-body-en:"Source Serif 4",Georgia,serif;
+    --serif-zh:"Noto Serif SC",source-han-serif-sc,serif;
+    --sans-zh:"Noto Sans SC",source-han-sans-sc,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:100%;height:100%;overflow:hidden;background:var(--ink);color:var(--paper);font-family:var(--sans-zh);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+
+  /* ============ WebGL 双背景 ============ */
+  canvas.bg{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;display:block;transition:opacity 1.2s ease}
+  canvas#bg-light{opacity:0}
+  canvas#bg-dark{opacity:1}
+  body.light-bg canvas#bg-light{opacity:1}
+  body.light-bg canvas#bg-dark{opacity:0}
+  body.low-power canvas.bg{display:none!important}
+
+  /* ============ Deck 容器 + 翻页 ============ */
+  /* width: NSLIDES * 100vw，会在 JS 里动态矫正 */
+  #deck{position:fixed;inset:0;width:10000vw;height:100vh;display:flex;flex-wrap:nowrap;transition:transform .9s cubic-bezier(.77,0,.175,1);z-index:10;will-change:transform}
+  .slide{width:100vw;height:100vh;flex:0 0 100vw;position:relative;padding:6vh 6vw 10vh 6vw;display:flex;flex-direction:column;overflow:hidden}
+  .slide.light{color:var(--ink);background:var(--paper)}
+  .slide.dark{color:var(--paper);background:var(--ink)}
+
+  /* 默认页：遮罩较厚，保证文字可读 */
+  .slide::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;transition:background .7s ease}
+  .slide.light::before{background:rgba(var(--paper-rgb),.78);backdrop-filter:blur(3px)}
+  .slide.dark::before{background:rgba(var(--ink-rgb),.78);backdrop-filter:blur(3px)}
+  /* Hero 页：遮罩大幅降低，让 WebGL 背景明显透出 */
+  .slide.hero.light::before{background:rgba(var(--paper-rgb),.16);backdrop-filter:none}
+  .slide.hero.dark::before{background:rgba(var(--ink-rgb),.12);backdrop-filter:none}
+  /* Hero 页顶底微弱渐隐，保证 chrome/foot 区域可读 */
+  .slide.hero::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none}
+  .slide.hero.light::after{background:linear-gradient(180deg,rgba(var(--paper-rgb),.28) 0%,rgba(var(--paper-rgb),0) 14%,rgba(var(--paper-rgb),0) 86%,rgba(var(--paper-rgb),.28) 100%)}
+  .slide.hero.dark::after{background:linear-gradient(180deg,rgba(var(--ink-rgb),.32) 0%,rgba(var(--ink-rgb),0) 14%,rgba(var(--ink-rgb),0) 86%,rgba(var(--ink-rgb),.32) 100%)}
+
+  /* ============ Magazine chrome：顶部 meta + 底部 foot ============ */
+  .chrome{display:flex;justify-content:space-between;align-items:flex-start;font-family:var(--mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;opacity:.7}
+  .chrome .left,.chrome .right{display:flex;gap:2.4em;align-items:center}
+  .chrome .sep{width:40px;height:1px;background:currentColor;opacity:.4}
+  .foot{margin-top:auto;display:flex;justify-content:space-between;align-items:flex-end;font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.55}
+  .foot .title{font-family:var(--serif-zh);font-weight:400;letter-spacing:.05em;text-transform:none;opacity:.75;font-size:13px}
+
+  .tag{display:inline-block;font-family:var(--mono);font-size:11px;letter-spacing:.24em;text-transform:uppercase;padding:6px 14px;border:1px solid currentColor;opacity:.85}
+  .rule{width:100%;height:1px;background:currentColor;opacity:.25;margin:3vh 0}
+  .rule.v{width:1px;height:100%;margin:0}
+
+  /* ============ 字体规则 ============
+     · 衬线（Noto Serif SC / Playfair）：大标题、重点金句、数字
+     · 非衬线（Noto Sans SC）：正文描述、body、补充说明
+     · 等宽（IBM Plex Mono）：kicker、meta 小标签、foot 右侧
+  */
+  .kicker{font-family:var(--mono);font-size:12px;letter-spacing:.3em;text-transform:uppercase;opacity:.6;margin-bottom:2.6vh}
+  .display{font-family:var(--serif-en);font-weight:700;font-size:11vw;line-height:.92;letter-spacing:-.025em}
+  .display-zh{font-family:var(--serif-zh);font-weight:700;font-size:7.8vw;line-height:1.04;letter-spacing:-.005em}
+  .h1-zh{font-family:var(--serif-zh);font-weight:700;font-size:4.6vw;line-height:1.12;letter-spacing:-.005em}
+  .h2-zh{font-family:var(--serif-zh);font-weight:600;font-size:3.2vw;line-height:1.2;letter-spacing:0}
+  .h3-zh{font-family:var(--serif-zh);font-weight:500;font-size:1.9vw;line-height:1.35}
+  .body-zh{font-family:var(--sans-zh);font-weight:400;font-size:max(15px,1.22vw);line-height:1.75;opacity:.82;letter-spacing:.01em}
+  .body-serif{font-family:var(--serif-zh);font-weight:400;font-size:max(15px,1.3vw);line-height:1.65;opacity:.88}
+  .lead{font-family:var(--serif-zh);font-weight:400;font-size:1.9vw;line-height:1.4;opacity:.85}
+  .meta{font-family:var(--mono);font-size:max(11px,.88vw);letter-spacing:.16em;text-transform:uppercase;opacity:.6}
+  .big-num{font-family:var(--serif-en);font-weight:800;font-size:10vw;line-height:.85;letter-spacing:-.03em;font-feature-settings:"tnum"}
+  .mid-num{font-family:var(--serif-en);font-weight:700;font-size:5.5vw;line-height:.88;letter-spacing:-.02em;font-feature-settings:"tnum"}
+  .ghost{font-family:var(--serif-en);font-weight:900;font-size:34vw;line-height:.8;opacity:.06;letter-spacing:-.04em;position:absolute;font-feature-settings:"tnum"}
+  em{font-style:italic;font-family:var(--serif-en)}
+  .en{font-family:var(--serif-en);font-style:italic;font-weight:500}
+
+  /* ============ 布局工具 ============ */
+  .col{display:flex;flex-direction:column;gap:2.4vh}
+  .row{display:flex;align-items:center;gap:3vw}
+  .grid-6{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);gap:4vw 6vw;flex:1;align-content:center;padding:2vh 0}
+  .grid-9{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:3vh 4vw;flex:1;align-content:center}
+  .grid-4{display:grid;grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(2,1fr);gap:4vh 6vw;flex:1;align-content:center}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:4vw;flex:1;align-content:center}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:4vw;flex:1;align-items:center}
+  .split-55{display:grid;grid-template-columns:55fr 45fr;gap:5vw;flex:1;align-items:stretch}
+  .fill{flex:1}
+  .center{align-items:center;justify-content:center;text-align:center}
+  .bottom-left{position:absolute;left:6vw;bottom:9vh;max-width:50vw}
+  .bottom-right{position:absolute;right:6vw;bottom:9vh;max-width:50vw;text-align:right}
+  .top-right{position:absolute;right:6vw;top:6vh;text-align:right}
+
+  /* ============ Stat（数字矩阵） ============ */
+  .stat{display:flex;flex-direction:column;gap:1vh;align-items:flex-start}
+  .stat .n{font-family:var(--serif-en);font-weight:800;font-size:8vw;line-height:.88;letter-spacing:-.03em;font-feature-settings:"tnum"}
+  .stat .l{font-family:var(--sans-zh);font-size:max(13px,1.05vw);opacity:.7;margin-top:1vh;font-weight:400;line-height:1.5}
+  .stat .m{font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;opacity:.5;margin-bottom:.2vh}
+
+  /* ============ Callout（引用框） ============ */
+  .callout{padding:3vh 2.4vw;border-left:3px solid currentColor;position:relative;font-family:var(--serif-zh);font-size:max(15px,1.2vw);line-height:1.55;opacity:.92}
+  .slide.light .callout{background:rgba(var(--ink-rgb),.05)}
+  .slide.dark .callout{background:rgba(var(--paper-rgb),.06)}
+  .callout .cite{display:block;margin-top:1.6vh;font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;opacity:.6}
+  .callout .q-big{font-family:var(--serif-zh);font-weight:600;font-size:max(17px,1.6vw);line-height:1.42}
+
+  /* ============ Platform（平台卡） ============ */
+  .plat{display:flex;flex-direction:column;justify-content:flex-end;padding:2vh 0;border-top:1px solid currentColor;border-color:rgba(127,127,127,.35)}
+  .plat .name{font-family:var(--serif-zh);font-weight:700;font-size:1.8vw;margin-bottom:.6vh}
+  .plat .nb{font-family:var(--serif-en);font-weight:700;font-size:3.2vw;letter-spacing:-.02em;line-height:1;font-feature-settings:"tnum"}
+  .plat .sub{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;opacity:.55;margin-top:.6vh}
+  .plat .fill{font-family:var(--sans-zh);font-weight:300;font-size:2.4vw;opacity:.28;letter-spacing:-.01em;line-height:1}
+
+  /* ============ Rowline（表格行） ============ */
+  .rowline{display:grid;grid-template-columns:1fr 2fr 1fr;gap:2vw;padding:2.2vh 0;border-top:1px solid currentColor;align-items:center;border-color:rgba(127,127,127,.25)}
+  .rowline:last-child{border-bottom:1px solid currentColor;border-color:rgba(127,127,127,.25)}
+  .rowline .k{font-family:var(--serif-zh);font-weight:700;font-size:1.7vw}
+  .rowline .v{font-family:var(--sans-zh);font-weight:400;font-size:max(14px,1.2vw);opacity:.85;line-height:1.55}
+  .rowline .m{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;opacity:.6;justify-self:end}
+
+  /* ============ Pillar（支柱卡片） ============ */
+  .pillar{display:flex;flex-direction:column;gap:1.8vh}
+  .pillar .ic{font-family:var(--serif-en);font-style:italic;font-size:2.6vw;opacity:.45;font-weight:400}
+  .pillar .ic svg{width:2.8vw;height:2.8vw;stroke-width:1.2;opacity:.7}
+  .pillar .t{font-family:var(--serif-zh);font-weight:700;font-size:2.4vw;line-height:1.1}
+  .pillar .d{font-family:var(--sans-zh);font-weight:400;font-size:max(14px,1.1vw);opacity:.76;line-height:1.6}
+
+  /* ============ Signature / Highlight ============ */
+  .sign{font-family:var(--serif-en);font-style:italic;font-weight:500;font-size:2vw;opacity:.7}
+  .hi{position:relative;display:inline}
+  .slide.dark .hi::after{content:"";position:absolute;left:-.1em;right:-.1em;bottom:-.05em;height:.28em;background:rgba(var(--paper-rgb),.15);z-index:-1}
+  .slide.light .hi::after{content:"";position:absolute;left:-.1em;right:-.1em;bottom:-.05em;height:.28em;background:rgba(var(--ink-rgb),.08);z-index:-1}
+
+  /* ============ Icons（Lucide via CDN） ============ */
+  .ico{width:1em;height:1em;display:inline-block;vertical-align:-.12em;stroke:currentColor;fill:none;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+  .ico-lg,.ico-md,.ico-sm{fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round}
+  .ico-lg{width:2.6vw;height:2.6vw;stroke-width:1.2;display:inline-block}
+  .ico-md{width:1.8vw;height:1.8vw;stroke-width:1.3;display:inline-block;vertical-align:-.4em}
+  .ico-sm{width:1.1vw;height:1.1vw;stroke-width:1.4;display:inline-block;vertical-align:-.15em;opacity:.7}
+
+  /* ============ 图片占位（虚线框，提示设计师位置） ============ */
+  .img-slot{border:1.5px dashed rgba(127,127,127,.4);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1vh;padding:2vh 2vw;font-family:var(--mono);font-size:10px;letter-spacing:.28em;text-transform:uppercase;opacity:.55;position:relative;aspect-ratio:16/9;width:100%;max-height:56vh;margin-inline:auto;box-sizing:border-box}
+  .img-slot::before{content:"";position:absolute;inset:8px;border:1px solid currentColor;opacity:.2}
+  .img-slot .plus{font-size:2vw;font-weight:300;opacity:.5;letter-spacing:0}
+  .img-slot .label{position:relative;z-index:2;text-align:center}
+  .img-slot.r-4x3{aspect-ratio:4/3}
+  .img-slot.r-3x2{aspect-ratio:3/2}
+  .img-slot.r-1x1{aspect-ratio:1/1}
+
+  /* ============ 图片实填框（关键：固定高度 + 只裁底部） ============
+     重要约束：高度用内联 height:Nvh 精确控制，不要用 aspect-ratio（会撑破布局）
+     object-position:top center 保证严禁裁剪顶部和左右，只裁剪底部
+  */
+  .frame-img{overflow:hidden;position:relative;background:rgba(0,0,0,.04);box-sizing:border-box;width:100%;border-radius:4px}
+  .slide.dark .frame-img{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.12)}
+  .frame-img > img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block}
+  .frame-img.fit-contain > img{object-fit:contain;object-position:center center}
+  .frame-img.r-16x9{aspect-ratio:16/9;max-height:64vh}
+  .frame-img.r-16x10{aspect-ratio:16/10;max-height:56vh}
+  .frame-img.r-4x3{aspect-ratio:4/3;max-height:56vh}
+  .frame-img.r-3x2{aspect-ratio:3/2;max-height:46vh}
+  .frame-img.r-3x4{aspect-ratio:3/4;max-height:60vh}
+  .frame-img.r-1x1{aspect-ratio:1/1;max-height:50vh}
+  .frame-img.h-16{height:16vh}
+  .frame-img.h-18{height:18vh}
+  .frame-img.h-22{height:22vh}
+  .frame-img.h-26{height:26vh}
+  .frame-img.h-28{height:28vh}
+  .frame-cap{display:flex;justify-content:space-between;align-items:baseline;gap:1vw;margin-top:.8vh;font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;opacity:.72}
+  .frame-cap .pf{font-family:var(--serif-zh);font-weight:600;font-size:max(13px,1vw);letter-spacing:.04em;text-transform:none;opacity:.94}
+  .frame-cap .nb{font-family:var(--serif-en);font-style:italic;font-size:max(15px,1.2vw);letter-spacing:.02em;text-transform:none;opacity:.88}
+  .frame-cap .idx{font-family:var(--mono);opacity:.5}
+  figure.tile{display:flex;flex-direction:column;margin:0;min-width:0}
+  figure.tile > .frame-img{flex:0 0 auto}
+
+  /* ============ 导航 ============ */
+  #nav{position:fixed;left:50%;bottom:2.6vh;transform:translateX(-50%);z-index:30;display:flex;gap:10px;padding:8px 14px;border-radius:999px;background:rgba(0,0,0,.18);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+  #nav .dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.3);cursor:pointer;transition:all .3s ease;border:0;padding:0}
+  #nav .dot:hover{background:rgba(255,255,255,.5);transform:scale(1.15)}
+  #nav .dot.active{background:rgba(255,255,255,.95);width:22px;border-radius:999px}
+  body.light-bg #nav{background:rgba(255,255,255,.25)}
+  body.light-bg #nav .dot{background:rgba(var(--ink-rgb),.25)}
+  body.light-bg #nav .dot.active{background:rgba(var(--ink-rgb),.9)}
+  #hint{position:fixed;bottom:3vh;right:3vw;z-index:30;font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;opacity:.4;mix-blend-mode:difference;color:#aaa}
+  body.low-power #hint{opacity:.72;color:var(--paper);mix-blend-mode:normal}
+  body.light-bg.low-power #hint{color:var(--ink)}
+
+  /* ============================================================
+     ============ LAYOUTS API · 面向 agent 的类（v2）============
+     所有 layouts.md 中的骨架都基于下面这套命名。
+     如果你在 layouts.md 里看到某个类，它必须在下面有定义。
+     ============================================================ */
+
+  /* ---------- .frame：每页主内容容器 ---------- */
+  .frame{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+  /* 当 .frame 同时加了 grid 类时，grid 的 display:grid 覆盖 flex */
+  .frame.grid-2-7-5,
+  .frame.grid-2-6-6,
+  .frame.grid-2-8-4,
+  .frame.grid-3-3,
+  .frame.grid-6{display:grid}
+
+  /* ---------- 标题层级（API 名称，衬线为主） ---------- */
+  .h-hero{
+    font-family:var(--serif-zh);
+    font-weight:900;
+    font-size:10vw;
+    line-height:.96;
+    letter-spacing:-.02em;
+  }
+  .h-xl{
+    font-family:var(--serif-zh);
+    font-weight:700;
+    font-size:6.2vw;
+    line-height:1.08;
+    letter-spacing:-.01em;
+  }
+  .h-sub{
+    font-family:var(--serif-zh);
+    font-weight:500;
+    font-size:3.1vw;
+    line-height:1.25;
+    letter-spacing:0;
+    opacity:.7;
+  }
+  .h-md{
+    font-family:var(--serif-zh);
+    font-weight:600;
+    font-size:2.3vw;
+    line-height:1.3;
+  }
+  /* 英文标题专用（Playfair 衬线） */
+  .h-hero-en,.h-xl-en{font-family:var(--serif-en);letter-spacing:-.025em}
+
+  /* ---------- lead 引语 ---------- */
+  .lead{
+    font-family:var(--serif-zh);
+    font-weight:400;
+    font-size:1.75vw;
+    line-height:1.5;
+    opacity:.86;
+  }
+
+  /* ---------- meta-row 底部元数据 ---------- */
+  .meta-row{
+    display:flex;
+    gap:1.2em;
+    align-items:baseline;
+    flex-wrap:wrap;
+    font-family:var(--mono);
+    font-size:max(12px,.92vw);
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    opacity:.6;
+  }
+
+  /* ---------- stat-card（数据大字报用） ---------- */
+  .stat-card{
+    display:flex;
+    flex-direction:column;
+    gap:.8vh;
+    align-items:flex-start;
+    padding-top:1.6vh;
+    border-top:1px solid currentColor;
+    border-color:rgba(127,127,127,.3);
+  }
+  .stat-card .stat-label{
+    font-family:var(--mono);
+    font-size:max(10px,.78vw);
+    letter-spacing:.24em;
+    text-transform:uppercase;
+    opacity:.55;
+  }
+  .stat-card .stat-nb{
+    font-family:var(--serif-en);
+    font-weight:800;
+    font-size:5.8vw;
+    line-height:.9;
+    letter-spacing:-.03em;
+    font-feature-settings:"tnum";
+    margin-top:.4vh;
+  }
+  .stat-card .stat-nb .stat-unit{
+    font-family:var(--serif-zh);
+    font-weight:500;
+    font-size:.38em;
+    letter-spacing:0;
+    opacity:.72;
+    margin-left:.14em;
+  }
+  .stat-card .stat-note{
+    font-family:var(--sans-zh);
+    font-weight:400;
+    font-size:max(13px,1.05vw);
+    line-height:1.5;
+    opacity:.72;
+    margin-top:.6vh;
+  }
+  /* 当 stat-card 用于 grid-4（2x2），数字适度放大；若页面有标题+引文在上方，可内联 style 覆盖为更小值 */
+  .grid-4 .stat-card .stat-nb{font-size:5vw}
+  /* 当只有 3 个，字也可以稍大 */
+  .grid-3 .stat-card .stat-nb{font-size:6.8vw}
+
+  /* ---------- pipeline（流水线） ---------- */
+  .pipeline-section{
+    margin-top:4.4vh;
+    padding-top:2.8vh;
+    border-top:1px dashed rgba(127,127,127,.32);
+  }
+  .pipeline-section:first-of-type{
+    border-top:0;
+    padding-top:0;
+    margin-top:3vh;
+  }
+  .pipeline-label{
+    font-family:var(--mono);
+    font-size:max(11px,.85vw);
+    letter-spacing:.24em;
+    text-transform:uppercase;
+    opacity:.62;
+    margin-bottom:2.2vh;
+  }
+  .pipeline{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:1.2vw;
+  }
+  .pipeline[data-cols="3"]{grid-template-columns:repeat(3,1fr)}
+  .pipeline[data-cols="4"]{grid-template-columns:repeat(4,1fr)}
+  .pipeline[data-cols="6"]{grid-template-columns:repeat(6,1fr)}
+  .step{
+    display:flex;
+    flex-direction:column;
+    gap:.8vh;
+    padding-top:1.4vh;
+    border-top:1px solid currentColor;
+    border-color:rgba(127,127,127,.35);
+  }
+  .step-nb{
+    font-family:var(--serif-en);
+    font-style:italic;
+    font-weight:500;
+    font-size:1.15vw;
+    opacity:.45;
+  }
+  .step-title{
+    font-family:var(--sans-zh);
+    font-weight:700;
+    font-size:1.55vw;
+    letter-spacing:.01em;
+    line-height:1.2;
+  }
+  .step-desc{
+    font-family:var(--sans-zh);
+    font-weight:400;
+    font-size:max(12px,.95vw);
+    line-height:1.45;
+    opacity:.72;
+  }
+
+  /* ---------- 网格（layouts.md 所用） ---------- */
+  /* 这些类独立挂到任何容器上都能生效，不依赖 .frame 复合选择器 */
+  .grid-2-7-5{display:grid;grid-template-columns:7fr 5fr;gap:3vw 4vh;align-items:start}
+  .grid-2-6-6{display:grid;grid-template-columns:1fr 1fr;gap:3vw 4vh;align-items:start}
+  .grid-2-8-4{display:grid;grid-template-columns:8fr 4fr;gap:3vw 4vh;align-items:start}
+  .grid-3-3{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    grid-auto-rows:minmax(0,1fr);
+    gap:2.4vh 2vw;
+  }
+  /* grid-6 已在旧样式里定义为 3x2，这里仅补 align */
+
+  /* ---------- 图片 frame-img（layouts.md 主命名） ---------- */
+  /* 在旧样式里已定义，这里补 img-cap 命名别名与增强 */
+  figure.frame-img{margin:0;display:flex;flex-direction:column;min-width:0}
+  .img-cap{
+    display:block;
+    margin-top:.8vh;
+    font-family:var(--mono);
+    font-size:max(10px,.8vw);
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    opacity:.6;
+  }
+  /* callout src 命名别名 */
+  .callout-src{
+    display:block;
+    margin-top:1.6vh;
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:.2em;
+    text-transform:uppercase;
+    opacity:.6;
+  }
+
+  /* ---------- chrome & foot 补位（layouts.md 简单写法） ---------- */
+  .chrome{font-family:var(--mono);font-size:max(11px,.78vw);letter-spacing:.2em;text-transform:uppercase;opacity:.62}
+  .foot{font-family:var(--mono);font-size:max(11px,.78vw);letter-spacing:.18em;text-transform:uppercase;opacity:.5}
+
+  /* ============ 动效系统(Motion One 驱动) ============
+     所有 [data-anim] 元素默认隐藏,进入页面时由 JS 逐个揭示。
+     - cascade(默认):按 DOM 顺序 stagger 120ms 淡入 + y:16→0
+     - hero(hero 页自动):慢一点的 stagger 180ms
+     - quote(含 [data-anim="line"]):逐行 600ms 淡入
+     - directional(含 [data-anim="left|right"]):左→分隔线→右
+     - pipeline(data-animate="pipeline"):Space/→ 手动推进
+     Motion One 没加载成功时(CDN 断 + 本地丢),所有 [data-anim] 会兜底显示。
+  */
+  [data-anim]{opacity:1}
+  body.motion-ready [data-anim]{opacity:0}
+  body.motion-ready [data-anim="left"]{transform:translateX(-24px)}
+  body.motion-ready [data-anim="right"]{transform:translateX(24px)}
+  body.motion-ready [data-anim="line"]{opacity:0;transform:translateY(10px)}
+  body.motion-ready [data-animate="pipeline"] [data-anim]{opacity:.15}
+  body.low-power #deck{transition:none!important}
+  body.low-power *,
+  body.low-power *::before,
+  body.low-power *::after{animation:none!important;transition:none!important}
+  body.low-power.motion-ready [data-anim],
+  body.low-power [data-anim]{opacity:1!important;transform:none!important}
+
+  /* ---------- 响应式降级 ---------- */
+  @media (max-width:900px){
+    .display{font-size:16vw}
+    .display-zh{font-size:12vw}
+    .h1-zh{font-size:7vw}
+    .h-hero{font-size:14vw}
+    .h-xl{font-size:9vw}
+    .pipeline{grid-template-columns:repeat(2,1fr)}
+    .grid-2-7-5,.grid-2-6-6,.grid-2-8-4{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<script>
+  (function(){
+    const KEY = 'guizang-ppt-low-power';
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const stored = localStorage.getItem(KEY);
+    window.__lowPowerMode = stored === '1' || (stored === null && reduced);
+    function updateHint(){
+      const hint = document.getElementById('hint');
+      if(hint) hint.textContent = `← → 翻页 · B ${window.__lowPowerMode ? '动态' : '静态'} · ESC 索引`;
+    }
+    window.__setLowPowerMode = function(on, opts={}){
+      window.__lowPowerMode = !!on;
+      document.body.classList.toggle('low-power', window.__lowPowerMode);
+      if(opts.persist !== false) localStorage.setItem(KEY, window.__lowPowerMode ? '1' : '0');
+      if(window.__lowPowerMode && document.getAnimations){
+        document.getAnimations().forEach(a=>a.cancel());
+      }
+      updateHint();
+      dispatchEvent(new CustomEvent('ppt-low-power-change', {detail:{on:window.__lowPowerMode}}));
+      if(window.__playSlide) window.__playSlide(window.__currentSlideIndex || 0);
+    };
+    document.body.classList.toggle('low-power', window.__lowPowerMode);
+    addEventListener('DOMContentLoaded', updateHint, {once:true});
+  })();
+</script>
+
+<canvas id="bg-dark" class="bg"></canvas>
+<canvas id="bg-light" class="bg"></canvas>
+<div id="hint">← → 翻页 · B 静态 · ESC 索引</div>
+
+<div id="deck">
+
+<!-- ============================================================
+     SLIDES 插入区 · 在此处填充所有 <section class="slide ..."> 页面
+     每页模板参考 references/page-patterns.md
+     页面组件参考 references/components.md
+     ============================================================ -->
+
+
+<!-- ============================================================
+     P01 · 封面 · hero dark
+     ============================================================ -->
+<section class="slide hero dark">
+  <div class="chrome">
+    <div>HOSOO · EMBA 報告</div>
+    <div>Vol.01 · 2026</div>
+  </div>
+  <div class="frame" style="display:grid; gap:3.5vh; align-content:center; min-height:80vh">
+    <div class="kicker" data-anim>京都・西陣 · 元祿元年 1688</div>
+    <h1 class="h-hero" style="white-space:nowrap; font-size:9.5vw" data-anim>細尾 HOSOO</h1>
+    <h2 class="h-sub" data-anim>西陣織老舖如何織入世界級精品舞台</h2>
+    <p class="lead" style="max-width:64vw; margin-top:1vh" data-anim>
+      從32公分帶幅到150公分寬幅──一台自主開發的織機，如何讓百年工藝登上 Dior、Chanel 與關西萬博的舞台。
+    </p>
+    <div class="meta-row" style="margin-top:1.5vh" data-anim>
+      <span>第12代・細尾真孝</span><span>·</span>
+      <span>創業 1688</span><span>·</span>
+      <span>150cm 寬幅織機 14 台（自用生產設備）</span>
+    </div>
+  </div>
+  <div class="foot">
+    <div>西陣織産業轉型案例</div>
+    <div>HOSOO</div>
+  </div>
+</section>
+
+<!-- ============================================================
+     P02 · 簡報大綱 · dark
+     ============================================================ -->
+<section class="slide dark">
+  <div class="chrome">
+    <div>HOSOO · 全覽</div>
+    <div>AGENDA · 02 / 16</div>
+  </div>
+  <div class="frame" style="padding-top:4vh">
+    <div class="kicker" data-anim>Agenda · 簡報大綱</div>
+    <h2 class="h-xl" style="font-size:4.5vw; margin-bottom:4vh" data-anim>四個面向</h2>
+
+    <div data-anim>
+      <div class="rowline">
+        <div class="k" style="font-family:var(--mono); font-size:max(11px,.85vw); opacity:.55; letter-spacing:.2em">Act I</div>
+        <div class="v">企業與市場<br><span style="font-size:max(12px,.95vw); opacity:.62; font-weight:400">企業概要與沿革 · 市場現況：和服産業萎縮中的逆勢突圍</span></div>
+        <div class="m">Context</div>
+      </div>
+      <div class="rowline">
+        <div class="k" style="font-family:var(--mono); font-size:max(11px,.85vw); opacity:.55; letter-spacing:.2em">Act II</div>
+        <div class="v">轉型之道<br><span style="font-size:max(12px,.95vw); opacity:.62; font-weight:400">商業模式：變與不變 · 客層旅程與差異化策略</span></div>
+        <div class="m">Model</div>
+      </div>
+      <div class="rowline">
+        <div class="k" style="font-family:var(--mono); font-size:max(11px,.85vw); opacity:.55; letter-spacing:.2em">Act III</div>
+        <div class="v">人與知識<br><span style="font-size:max(12px,.95vw); opacity:.62; font-weight:400">組織與人才 · 知識管理：內隱與外顯知識的轉化</span></div>
+        <div class="m">People</div>
+      </div>
+      <div class="rowline">
+        <div class="k" style="font-family:var(--mono); font-size:max(11px,.85vw); opacity:.55; letter-spacing:.2em">Act IV</div>
+        <div class="v">因應建議<br><span style="font-size:max(12px,.95vw); opacity:.62; font-weight:400">AI 衝擊下的産業課題 · GO ON 生態系與品牌敘事三項提案</span></div>
+        <div class="m">Proposals</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div>HOSOO · 簡報架構</div>
+    <div>— · —</div>
+  </div>
+</section>
+
+<!-- ============================================================
+     P03 · Act I 幕封 · hero light
+     ============================================================ -->
+<section class="slide hero light">
+  <div class="chrome">
+    <div>HOSOO · 企業概要</div>
+    <div>Act I · 03 / 16</div>
+  </div>
+  <div class="frame" style="display:grid; gap:5vh; align-content:center; min-height:80vh">
+    <div class="kicker" data-anim>Act I</div>
+    <h1 class="h-hero" style="font-size:8vw; white-space:nowrap" data-anim>企業與市場</h1>
+    <p class="lead" style="max-width:56vw" data-anim>
+      從元祿元年創業至今，以及和服・西陣織産業所面對的市場環境。
+    </p>
+  </div>
+  <div class="foot">
+    <div>企業概要 · 市場現況</div>
+    <div>— · —</div>
+  </div>
+</section>
+
+<!-- ============================================================
+     P04 · 企業概要與沿革時間軸 · light
+     ============================================================ -->
+<section class="slide light">
+  <div class="chrome">
+    <div>HOSOO · 企業概要</div>
+    <div>Act I · 04 / 16</div>
+  </div>
+  <div class="frame" style="padding-top:4vh">
+    <div class="kicker" data-anim>01 企業概要與市場定位</div>
+    <h2 class="h-xl" style="font-size:4.8vw; margin-bottom:3vh" data-anim>西陣織老舖的世界轉型</h2>
+
+    <div class="grid-2-7-5" style="gap:4vw; align-items:start">
+      <!-- 左列：公司概要 -->
+      <div style="display:flex; flex-direction:column; gap:2vh" data-anim>
+        <div class="callout" style="padding:2.4vh 2vw">
+          <div class="body-zh" style="font-family:var(--sans-zh); font-size:max(13px,1.05vw); line-height:1.85">
+            <div style="display:grid; grid-template-columns:auto 1fr; gap:.6vh 1.2vw">
+              <span style="font-family:var(--mono); font-size:max(10px,.78vw); opacity:.55; letter-spacing:.18em; text-transform:uppercase; white-space:nowrap">創業</span><span>元祿元年（1688年）</span>
+              <span style="font-family:var(--mono); font-size:max(10px,.78vw); opacity:.55; letter-spacing:.18em; text-transform:uppercase; white-space:nowrap">所在地</span><span>京都市中京區 西陣</span>
+              <span style="font-family:var(--mono); font-size:max(10px,.78vw); opacity:.55; letter-spacing:.18em; text-transform:uppercase; white-space:nowrap">代表人</span><span>細尾 真孝（第12代）</span>
+              <span style="font-family:var(--mono); font-size:max(10px,.78vw); opacity:.55; letter-spacing:.18em; text-transform:uppercase; white-space:nowrap">事業</span><span>西陣織物製造・批發／自有品牌 HOSOO</span>
+              <span style="font-family:var(--mono); font-size:max(10px,.78vw); opacity:.55; letter-spacing:.18em; text-transform:uppercase; white-space:nowrap">核心技術</span><span>世界唯一 150cm 寬幅西陣織織機（14台，自用）</span>
+              <span style="font-family:var(--mono); font-size:max(10px,.78vw); opacity:.55; letter-spacing:.18em; text-transform:uppercase; white-space:nowrap">生態系</span><span>GO ON（京都傳統工藝6家後繼者聯盟）</span>
+            </div>
+          </div>
+        </div>
+        <div class="callout" style="padding:1.8vh 2vw; border-left-width:2px; font-size:max(13px,1vw); line-height:1.6">
+          「透過協業持續創造美的革新」
+          <div class="callout-src">— 細尾真孝 · 公司 DNA</div>
+        </div>
+      </div>
+
+      <!-- 右列：時間軸 -->
+      <div data-anim>
+        <div class="rowline" style="grid-template-columns:auto 1fr; gap:1.5vw">
+          <div class="m" style="font-size:max(11px,.9vw); white-space:nowrap">1688</div>
+          <div class="v" style="font-size:max(13px,1.02vw)">獲本願寺賜姓「細尾」，於京都西陣創立織屋，承襲約1200年歷史的西陣織工藝</div>
+        </div>
+        <div class="rowline" style="grid-template-columns:auto 1fr; gap:1.5vw">
+          <div class="m" style="font-size:max(11px,.9vw); white-space:nowrap">1923</div>
+          <div class="v" style="font-size:max(13px,1.02vw)">第9代開創帶・和服批發業（問屋），連結全國産地職人與通路</div>
+        </div>
+        <div class="rowline" style="grid-template-columns:auto 1fr; gap:1.5vw">
+          <div class="m" style="font-size:max(11px,.9vw); white-space:nowrap">1960</div>
+          <div class="v" style="font-size:max(13px,1.02vw)">株式會社化，組織邁向現代企業體制</div>
+        </div>
+        <div class="rowline" style="grid-template-columns:auto 1fr; gap:1.5vw">
+          <div class="m" style="font-size:max(11px,.9vw); white-space:nowrap">2010</div>
+          <div class="v" style="font-size:max(13px,1.02vw)">自主開發世界唯一 150cm 寬幅西陣織織機；首位客戶：<em>Christian Dior</em></div>
+        </div>
+        <div class="rowline" style="grid-template-columns:auto 1fr; gap:1.5vw">
+          <div class="m" style="font-size:max(11px,.9vw); white-space:nowrap">2012</div>
+          <div class="v" style="font-size:max(13px,1.02vw)">與京都5家傳統工藝後繼者共組 <strong>GO ON</strong>，推出 Japan Handmade 品牌</div>
+        </div>
+        <div class="rowline" style="grid-template-columns:auto 1fr; gap:1.5vw">
+          <div class="m" style="font-size:max(11px,.9vw); white-space:nowrap">2019+</div>
+          <div class="v" style="font-size:max(13px,1.02vw)">自有品牌旗艦店、HOSOO MILAN、HOSOO TOKYO 接連開設；參與大阪・關西萬博及 Milan Design Week</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div>1688 — Present</div>
+    <div>Act I · 企業沿革</div>
+  </div>
+</section>
+
+<!-- ============================================================
+     P05 · 市場現況 · dark
+     ============================================================ -->
+<section class="slide dark">
+  <div class="chrome">
+    <div>HOSOO · 市場定位</div>
+    <div>Act I · 05 / 16</div>
+  </div>
+  <div class="frame" style="padding-top:4vh">
+    <div class="kicker" data-anim>01 市場現況</div>
+    <h2 class="h-xl" style="font-size:4.8vw; margin-bottom:3.5vh" data-anim>萎縮中的逆勢突圍</h2>
+
+    <div class="grid-2-6-6" style="gap:5vw; align-items:start">
+      <!-- 左：和服市場萎縮 -->
+      <div>
+        <p class="kicker" style="margin-bottom:2vh; opacity:.75" data-anim>日本和服市場規模（億日圓）</p>
+        <div style="display:flex; flex-direction:column; gap:1.8vh">
+          <div class="stat-card" data-anim>
+            <div class="stat-label">1980s 高峰</div>
+            <div class="stat-nb">1.8<span class="stat-unit">兆</span></div>
+            <div class="stat-note">産業全盛期</div>
+          </div>
+          <div class="stat-card" data-anim>
+            <div class="stat-label">2020 疫情低點</div>
+            <div class="stat-nb">1,925<span class="stat-unit">億</span></div>
+            <div class="stat-note">COVID 衝擊最低點</div>
+          </div>
+          <div class="stat-card" data-anim>
+            <div class="stat-label">2025 現況</div>
+            <div class="stat-nb">2,210<span class="stat-unit">億</span></div>
+            <div class="stat-note">僅剩高峰期 1/6</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右：HOSOO 應用領域擴張 -->
+      <div>
+        <p class="kicker" style="margin-bottom:2vh; opacity:.75" data-anim>HOSOO 的應用領域擴張</p>
+        <div style="display:flex; flex-direction:column; gap:0">
+          <div class="rowline" style="grid-template-columns:auto 1fr; gap:1.5vw" data-anim>
+            <div class="m">傳統</div>
+            <div class="v">和服腰帶（32cm 帶幅，傳統核心）</div>
+          </div>
+          <div class="rowline" style="grid-template-columns:auto 1fr; gap:1.5vw" data-anim>
+            <div class="m">2010+</div>
+            <div class="v">精品店內裝（Dior、Chanel、Hermès）</div>
+          </div>
+          <div class="rowline" style="grid-template-columns:auto 1fr; gap:1.5vw" data-anim>
+            <div class="m">擴展</div>
+            <div class="v">五星級飯店軟裝・汽車內飾</div>
+          </div>
+          <div class="rowline" style="grid-template-columns:auto 1fr; gap:1.5vw" data-anim>
+            <div class="m">2019+</div>
+            <div class="v">HOSOO 自有品牌家具・生活選品（B2C）</div>
+          </div>
+          <div class="rowline" style="grid-template-columns:auto 1fr; gap:1.5vw" data-anim>
+            <div class="m">2025</div>
+            <div class="v">關西萬博建築素材・Milan Design Week</div>
+          </div>
+        </div>
+        <div class="callout" style="margin-top:3vh" data-anim>
+          150cm 寬幅技術的開發，使 HOSOO 從市場萎縮的和服産業，成功跨入精品、飯店、建築等多元領域。
+          <div class="callout-src">核心轉型路徑</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div>市場規模・應用擴張</div>
+    <div>Act I · 市場現況</div>
+  </div>
+</section>
+
+<!-- ============================================================
+     P06 · Act II 幕封 · hero dark
+     ============================================================ -->
+<section class="slide hero dark">
+  <div class="chrome">
+    <div>HOSOO · 商業模式</div>
+    <div>Act II · 06 / 16</div>
+  </div>
+  <div class="frame" style="display:grid; gap:5vh; align-content:center; min-height:80vh">
+    <div class="kicker" data-anim>Act II</div>
+    <h1 class="h-hero" style="font-size:8vw; white-space:nowrap" data-anim>轉型之道</h1>
+    <p class="lead" style="max-width:58vw" data-anim>
+      從32公分帶幅到150公分寬幅──事業領域的擴張，與核心定位的延續。
+    </p>
+  </div>
+  <div class="foot">
+    <div>商業模式 · 客層策略</div>
+    <div>— · —</div>
+  </div>
+</section>
+
+<!-- ============================================================
+     P07 · 商業模式：變與不變 · light
+     ============================================================ -->
+<section class="slide light" data-animate="directional">
+  <div class="chrome">
+    <div>HOSOO · 商業模式</div>
+    <div>Act II · 07 / 16</div>
+  </div>
+  <div class="frame" style="padding-top:4vh">
+    <div class="kicker" data-anim>02 商業模式：變與不變</div>
+    <h2 class="h-xl" style="font-size:4.8vw; margin-bottom:3.5vh" data-anim>變與不變</h2>
+
+    <div class="grid-2-6-6" style="gap:4vw">
+      <!-- 不變的核心 -->
+      <div data-anim="left" style="padding:2.8vh 2.2vw; border-left:3px solid currentColor">
+        <div class="kicker" style="opacity:.9; margin-bottom:1.8vh">不變的核心</div>
+        <ul style="padding-left:0; display:flex; flex-direction:column; gap:2.2vh; list-style:none">
+          <li style="font-family:var(--sans-zh); font-size:max(14px,1.08vw); line-height:1.6">
+            <strong style="font-family:var(--serif-zh); font-weight:600; display:block; margin-bottom:.3vh">西陣織的工藝根基</strong>
+            20多道工序・分工職人體制，延續約1200年的傳統
+          </li>
+          <li style="font-family:var(--sans-zh); font-size:max(14px,1.08vw); line-height:1.6">
+            <strong style="font-family:var(--serif-zh); font-weight:600; display:block; margin-bottom:.3vh">對「美」的極致追求</strong>
+            「透過協業持續創造美的革新」——DNA 從未改變
+          </li>
+          <li style="font-family:var(--sans-zh); font-size:max(14px,1.08vw); line-height:1.6">
+            <strong style="font-family:var(--serif-zh); font-weight:600; display:block; margin-bottom:.3vh">問屋業的連結角色</strong>
+            自1923年起扮演職人・産地・通路的中間樞紐
+          </li>
+          <li style="font-family:var(--sans-zh); font-size:max(14px,1.08vw); line-height:1.6">
+            <strong style="font-family:var(--serif-zh); font-weight:600; display:block; margin-bottom:.3vh">12代家族傳承</strong>
+            工藝與經營理念世代相傳
+          </li>
+        </ul>
+      </div>
+
+      <!-- 擴展的事業領域 -->
+      <div data-anim="right" style="padding:2.8vh 2.2vw; border-left:3px solid currentColor">
+        <div class="kicker" style="opacity:.9; margin-bottom:1.8vh">擴展的事業領域</div>
+        <ul style="padding-left:0; display:flex; flex-direction:column; gap:2.2vh; list-style:none">
+          <li style="font-family:var(--sans-zh); font-size:max(14px,1.08vw); line-height:1.6">
+            <strong style="font-family:var(--serif-zh); font-weight:600; display:block; margin-bottom:.3vh">幅寬的突破</strong>
+            2010年自主開發 150cm 寬幅織機（自用），符合世界紡織標準
+          </li>
+          <li style="font-family:var(--sans-zh); font-size:max(14px,1.08vw); line-height:1.6">
+            <strong style="font-family:var(--serif-zh); font-weight:600; display:block; margin-bottom:.3vh">應用領域的擴展</strong>
+            精品店內裝・五星飯店・家具・汽車內飾・建築素材
+          </li>
+          <li style="font-family:var(--sans-zh); font-size:max(14px,1.08vw); line-height:1.6">
+            <strong style="font-family:var(--serif-zh); font-weight:600; display:block; margin-bottom:.3vh">B2B 到自有品牌</strong>
+            2019年成立 HOSOO 品牌，從幕後供應商走向品牌前台
+          </li>
+          <li style="font-family:var(--sans-zh); font-size:max(14px,1.08vw); line-height:1.6">
+            <strong style="font-family:var(--serif-zh); font-weight:600; display:block; margin-bottom:.3vh">從京都到全球據點</strong>
+            米蘭（2020）、東京（2023）、MIT 媒體實驗室合作
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div>核心 · 延續 · 創新</div>
+    <div>Act II · 商業模式</div>
+  </div>
+</section>
+
+<!-- ============================================================
+     P08 · 客層旅程與差異化 · dark
+     ============================================================ -->
+<section class="slide dark" data-animate="pipeline">
+  <div class="chrome">
+    <div>HOSOO · 客層策略</div>
+    <div>Act II · 08 / 16</div>
+  </div>
+  <div class="frame" style="padding-top:3.5vh">
+    <div class="kicker">03 客層與差異化策略</div>
+    <h2 class="h-xl" style="font-size:4.2vw; margin-bottom:1.5vh">客層的擴展</h2>
+    <p class="lead" style="font-size:1.5vw; margin-bottom:3vh; opacity:.75">從公家武士，到全世界的生活者</p>
+
+    <div class="pipeline-section" style="border-top:0; margin-top:0; padding-top:0">
+      <div class="pipeline-label">客層旅程 · Customer Journey</div>
+      <div class="pipeline" data-cols="5">
+        <div class="step" data-anim="step">
+          <div class="step-nb">Stage 01</div>
+          <div class="step-title">公家・武士</div>
+          <div class="step-desc">江戶以前，貴族與權力象徵的西陣織需求</div>
+        </div>
+        <div class="step" data-anim="step">
+          <div class="step-nb">Stage 02</div>
+          <div class="step-title">全國和服店</div>
+          <div class="step-desc">1923年起，問屋批發業，連結産地與通路</div>
+        </div>
+        <div class="step" data-anim="step">
+          <div class="step-nb">Stage 03</div>
+          <div class="step-title">國際精品品牌</div>
+          <div class="step-desc">2010年起，Dior、Chanel、Hermès 等內裝材料</div>
+        </div>
+        <div class="step" data-anim="step">
+          <div class="step-nb">Stage 04</div>
+          <div class="step-title">飯店・建築</div>
+          <div class="step-desc">五星飯店、汽車內飾、關西萬博建築素材</div>
+        </div>
+        <div class="step" data-anim="step">
+          <div class="step-nb">Stage 05</div>
+          <div class="step-title">品牌愛好者</div>
+          <div class="step-desc">2019年起，HOSOO 自有品牌家具・生活選品</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pipeline-section">
+      <div class="pipeline-label">差異化關鍵 · 1200年工藝 × 150cm 獨有技術</div>
+      <div class="pipeline" data-cols="3">
+        <div class="step" data-anim="step">
+          <div class="step-nb">Moat 01</div>
+          <div class="step-title">技術獨佔性</div>
+          <div class="step-desc">150cm 寬幅西陣織技術目前仍是 HOSOO 獨有，競爭者難以短期複製</div>
+        </div>
+        <div class="step" data-anim="step">
+          <div class="step-nb">Moat 02</div>
+          <div class="step-title">1200年美學資產</div>
+          <div class="step-desc">承載貴族與權力象徵的歷史厚度，任何新興材料品牌都無法速成的文化正統性</div>
+        </div>
+        <div class="step" data-anim="step">
+          <div class="step-nb">Moat 03</div>
+          <div class="step-title">GO ON 生態系</div>
+          <div class="step-desc">與京都5家傳統工藝後繼者共組聯盟，以集體品牌力打入海外市場</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div>← → 或 Space 逐步展開</div>
+    <div>Act II · 客層旅程</div>
+  </div>
+</section>
+
+<!-- ============================================================
+     P09 · Act III 幕封 · hero light
+     ============================================================ -->
+<section class="slide hero light">
+  <div class="chrome">
+    <div>HOSOO · 組織・知識</div>
+    <div>Act III · 09 / 16</div>
+  </div>
+  <div class="frame" style="display:grid; gap:5vh; align-content:center; min-height:80vh">
+    <div class="kicker" data-anim>Act III</div>
+    <h1 class="h-hero" style="font-size:7.8vw; white-space:nowrap" data-anim>人與知識</h1>
+    <p class="lead" style="max-width:58vw" data-anim>
+      12代家族傳承，以及在産業萎縮中逆勢成長的職人團隊，與知識的轉化之道。
+    </p>
+  </div>
+  <div class="foot">
+    <div>組織 · 人才 · 知識管理</div>
+    <div>— · —</div>
+  </div>
+</section>
+
+<!-- ============================================================
+     P10 · 組織與人才 · light
+     ============================================================ -->
+<section class="slide light">
+  <div class="chrome">
+    <div>HOSOO · 組織人才</div>
+    <div>Act III · 10 / 16</div>
+  </div>
+  <div class="frame" style="padding-top:2.5vh">
+    <div class="kicker" data-anim>04 組織與人才</div>
+    <h2 class="h-xl" style="font-size:4vw; margin-bottom:2vh" data-anim>家族傳承</h2>
+
+    <div class="grid-2-7-5" style="gap:3vw; align-items:start">
+      <!-- 左列：傳承歷程 -->
+      <div style="display:flex; flex-direction:column; justify-content:space-between; gap:1.2vh" data-anim>
+        <div style="display:flex; flex-direction:column; gap:0">
+          <div class="rowline" style="grid-template-columns:auto 1fr; gap:1.5vw; padding:1.4vh 0">
+            <div class="m" style="white-space:nowrap">創業期</div>
+            <div class="v" style="font-size:max(13px,1vw)">1688年，獲本願寺賜姓「細尾」，於西陣創立織屋，承襲千年工藝傳統</div>
+          </div>
+          <div class="rowline" style="grid-template-columns:auto 1fr; gap:1.5vw; padding:1.4vh 0">
+            <div class="m" style="white-space:nowrap">近代化</div>
+            <div class="v" style="font-size:max(13px,1vw)">第9代德次郎（1923）開創問屋業，奠定全國通路根基</div>
+          </div>
+          <div class="rowline" style="grid-template-columns:auto 1fr; gap:1.5vw; padding:1.4vh 0">
+            <div class="m" style="white-space:nowrap">轉型期</div>
+            <div class="v" style="font-size:max(13px,1vw)">第12代真孝自幼於義大利成長，2008年返京，2010年主導開發 150cm 寬幅織機</div>
+          </div>
+          <div class="rowline" style="grid-template-columns:auto 1fr; gap:1.5vw; padding:1.4vh 0">
+            <div class="m" style="white-space:nowrap">現在</div>
+            <div class="v" style="font-size:max(13px,1vw)">身兼 GO ON 發起成員、MIT 媒體實驗室 Directors Fellow，推動傳統工藝的全球對話</div>
+          </div>
+        </div>
+        <div class="callout" style="margin-top:1.5vh; padding:1.8vh 1.8vw; font-size:max(13px,1vw)">
+          12代家族傳承＋海外成長背景的繼承者，是「家業延續」與「外部視角」的罕見組合，也是轉型成功的關鍵。
+          <div class="callout-src">組織轉型核心觀察</div>
+        </div>
+      </div>
+
+      <!-- 右列：人才型態 -->
+      <div style="display:flex; flex-direction:column; gap:0" data-anim>
+        <p class="kicker" style="margin-bottom:1.2vh; opacity:.7">職人與人才團隊構成</p>
+        <div class="pillar" style="gap:.8vh; padding:1.2vh 0; border-top:1px solid rgba(127,127,127,.25)">
+          <div class="t" style="font-size:1.8vw">織物職人</div>
+          <div class="d" style="font-size:max(13px,.98vw)">20多道工序各自專精的傳統工藝職人，目前約25人，含20-30代年輕世代</div>
+        </div>
+        <div class="pillar" style="gap:.8vh; padding:1.2vh 0; border-top:1px solid rgba(127,127,127,.25)">
+          <div class="t" style="font-size:1.8vw">設計與研發</div>
+          <div class="d" style="font-size:max(13px,.98vw)">與國際藝術家、DIMORESTUDIO 及 MIT 媒體實驗室協作的創意人員</div>
+        </div>
+        <div class="pillar" style="gap:.8vh; padding:1.2vh 0; border-top:1px solid rgba(127,127,127,.25)">
+          <div class="t" style="font-size:1.8vw">海外業務</div>
+          <div class="d" style="font-size:max(13px,.98vw)">負責米蘭、東京據點與精品品牌客戶關係的國際業務團隊</div>
+        </div>
+        <div class="pillar" style="gap:.8vh; padding:1.2vh 0; border-top:1px solid rgba(127,127,127,.25); border-bottom:1px solid rgba(127,127,127,.25)">
+          <div class="t" style="font-size:1.8vw">生態系協作</div>
+          <div class="d" style="font-size:max(13px,.98vw)">代表公司參與 GO ON、Japan Handmade 等跨企業聯盟的溝通企劃人才</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div>逆勢招募年輕職人</div>
+    <div>Act III · 組織人才</div>
+  </div>
+</section>
+
+<!-- ============================================================
+     P11 · 知識管理：內隱與外顯 · dark
+     ============================================================ -->
+<section class="slide dark" data-animate="directional">
+  <div class="chrome">
+    <div>HOSOO · 知識管理</div>
+    <div>Act III · 11 / 16</div>
+  </div>
+  <div class="frame" style="padding-top:4vh">
+    <div class="kicker" data-anim>05 知識管理：內隱與外顯知識</div>
+    <h2 class="h-xl" style="font-size:4.8vw; margin-bottom:3.5vh" data-anim>知識的轉化</h2>
+
+    <div class="grid-2-6-6" style="gap:4.5vw">
+      <!-- 內隱知識 -->
+      <div data-anim="left" style="padding:2.8vh 2.2vw; border-left:3px solid currentColor; opacity:.88">
+        <div class="kicker" style="opacity:.9; margin-bottom:1.8vh">內隱知識 · Tacit</div>
+        <ul style="padding-left:0; display:flex; flex-direction:column; gap:2.4vh; list-style:none">
+          <li style="font-family:var(--sans-zh); font-size:max(14px,1.08vw); line-height:1.6">
+            <strong style="font-family:var(--serif-zh); font-weight:600; display:block; margin-bottom:.3vh">20多道工序的職人手藝</strong>
+            從紋樣設計、染色到織造，每道工序由專精職人分工，技藝高度仰賴經驗與手感，難以言傳
+          </li>
+          <li style="font-family:var(--sans-zh); font-size:max(14px,1.08vw); line-height:1.6">
+            <strong style="font-family:var(--serif-zh); font-weight:600; display:block; margin-bottom:.3vh">對「美」的鑑賞眼光</strong>
+            細尾真孝自幼在義大利成長所培養的審美視角，是公司能與國際精品對話的關鍵感官資本
+          </li>
+          <li style="font-family:var(--sans-zh); font-size:max(14px,1.08vw); line-height:1.6">
+            <strong style="font-family:var(--serif-zh); font-weight:600; display:block; margin-bottom:.3vh">織機調校的工程 Know-how</strong>
+            150cm 寬幅織機的開發歷經一年試錯，相關調校經驗高度依賴現場職人的手感與經驗
+          </li>
+        </ul>
+      </div>
+
+      <!-- 外顯知識 -->
+      <div data-anim="right" style="padding:2.8vh 2.2vw; border-left:3px solid currentColor">
+        <div class="kicker" style="opacity:.9; margin-bottom:1.8vh">外顯知識 · Explicit</div>
+        <ul style="padding-left:0; display:flex; flex-direction:column; gap:2.4vh; list-style:none">
+          <li style="font-family:var(--sans-zh); font-size:max(14px,1.08vw); line-height:1.6">
+            <strong style="font-family:var(--serif-zh); font-weight:600; display:block; margin-bottom:.3vh">150cm 寬幅織機</strong>
+            將內隱的調校經驗固化為實體設備──可複製、可規模化（已增至14台，自用）的生産資產
+          </li>
+          <li style="font-family:var(--sans-zh); font-size:max(14px,1.08vw); line-height:1.6">
+            <strong style="font-family:var(--serif-zh); font-weight:600; display:block; margin-bottom:.3vh">哈佛商學院案例教材</strong>
+            2019年 HOSOO 轉型故事被寫成《Innovating Tradition at Hosoo》，成為全球商學院可引用的形式化知識
+          </li>
+          <li style="font-family:var(--sans-zh); font-size:max(14px,1.08vw); line-height:1.6">
+            <strong style="font-family:var(--serif-zh); font-weight:600; display:block; margin-bottom:.3vh">著作與品牌論述</strong>
+            細尾真孝著《日本の美意識で世界初に挑む》，將經營哲學與美學理念整理成書，對外傳遞品牌敘事
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div>內隱 → 外顯 · 知識轉化</div>
+    <div>Act III · 知識管理</div>
+  </div>
+</section>
+
+<!-- ============================================================
+     P12 · 知識活化案例 · light
+     ============================================================ -->
+<section class="slide light" data-animate="pipeline">
+  <div class="chrome">
+    <div>HOSOO · 知識活化</div>
+    <div>Act III · 12 / 16</div>
+  </div>
+  <div class="frame" style="padding-top:3.5vh">
+    <div class="kicker">05 知識如何被轉化與活化</div>
+    <h2 class="h-xl" style="font-size:4.2vw; margin-bottom:3vh">知識活化案例</h2>
+
+    <div class="pipeline-section" style="border-top:0; margin-top:0; padding-top:0">
+      <div class="pipeline-label">四個關鍵轉化案例 · ← → Space 依序展開</div>
+      <div class="pipeline" data-cols="4">
+        <div class="step" data-anim="step">
+          <div class="step-nb">Case 01</div>
+          <div class="step-title">32cm → 150cm</div>
+          <div class="step-desc">將傳承百年的西陣織造工藝，轉化為符合世界紡織標準的 150cm 寬幅技術，開創精品內裝材料市場</div>
+        </div>
+        <div class="step" data-anim="step">
+          <div class="step-nb">Case 02</div>
+          <div class="step-title">個別工藝 → GO ON</div>
+          <div class="step-desc">2012年與京都5家傳統工藝後繼者共組 GO ON，推出 Japan Handmade，將分散工藝知識整合為集體國際話語權</div>
+        </div>
+        <div class="step" data-anim="step">
+          <div class="step-nb">Case 03</div>
+          <div class="step-title">傳統紋樣 → 跨界合作</div>
+          <div class="step-desc">與 DIMORESTUDIO、Gucci 及藝術家合作（Hemispheres Collection、Gucci Nishijin），讓傳統紋樣持續產生新表現</div>
+        </div>
+        <div class="step" data-anim="step">
+          <div class="step-nb">Case 04</div>
+          <div class="step-title">供應商 → 品牌體驗</div>
+          <div class="step-desc">透過 HOSOO FLAGSHIP STORE、GALLERY、RESIDENCE 等空間，將織造知識轉化為消費者可直接體驗的品牌資產</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div>← → 或 Space 逐步展開</div>
+    <div>Act III · 知識活化</div>
+  </div>
+</section>
+
+<!-- ============================================================
+     P13 · Act IV 幕封 · hero dark
+     ============================================================ -->
+<section class="slide hero dark">
+  <div class="chrome">
+    <div>HOSOO · 因應建議</div>
+    <div>Act IV · 13 / 16</div>
+  </div>
+  <div class="frame" style="display:grid; gap:5vh; align-content:center; min-height:80vh">
+    <div class="kicker" data-anim>Act IV</div>
+    <h1 class="h-hero" style="font-size:8vw; white-space:nowrap" data-anim>因應建議</h1>
+    <p class="lead" style="max-width:58vw" data-anim>
+      GO ON 生態系與品牌敘事──給 HOSOO 的具體提案，以及 AI 衝擊下的産業課題。
+    </p>
+  </div>
+  <div class="foot">
+    <div>現代化因應 · 提案</div>
+    <div>— · —</div>
+  </div>
+</section>
+
+<!-- ============================================================
+     P14 · 三項提案 · dark
+     ============================================================ -->
+<section class="slide dark">
+  <div class="chrome">
+    <div>HOSOO · 因應建議</div>
+    <div>Act IV · 14 / 16</div>
+  </div>
+  <div class="frame" style="padding-top:4vh">
+    <div class="kicker" data-anim>06 面對現代化的因應建議</div>
+    <h2 class="h-xl" style="font-size:4.8vw; margin-bottom:3.5vh" data-anim>三項提案</h2>
+
+    <div class="grid-3" style="gap:3vw; align-items:start">
+      <div data-anim>
+        <div class="stat-card" style="border-top-width:2px; padding-top:2.4vh">
+          <div class="stat-label">Proposal 01</div>
+          <div class="stat-nb" style="font-family:var(--serif-zh); font-size:2.2vw; line-height:1.2; margin-top:1.2vh">職人技藝的<br>系統化傳承</div>
+          <div class="stat-note" style="margin-top:1.8vh; font-size:max(13px,1.02vw); line-height:1.7">
+            將20多道工序依序拆解為分階段訓練模組與評鑑標準，讓快速擴增的年輕職人（約25人）能有效承接核心技藝，降低對少數資深職人的依賴。
+          </div>
+        </div>
+      </div>
+
+      <div data-anim>
+        <div class="stat-card" style="border-top-width:2px; padding-top:2.4vh">
+          <div class="stat-label">Proposal 02</div>
+          <div class="stat-nb" style="font-family:var(--serif-zh); font-size:2.2vw; line-height:1.2; margin-top:1.2vh">GO ON 模式的<br>延伸應用</div>
+          <div class="stat-note" style="margin-top:1.8vh; font-size:max(13px,1.02vw); line-height:1.7">
+            將跨企業協作的 GO ON 經驗，延伸至更多京都傳統産業的二代經營者，建立可複製的「老舖聯盟」框架，讓單一企業資源的限制透過生態系合作被放大。
+          </div>
+        </div>
+      </div>
+
+      <div data-anim>
+        <div class="stat-card" style="border-top-width:2px; padding-top:2.4vh">
+          <div class="stat-label">Proposal 03</div>
+          <div class="stat-nb" style="font-family:var(--serif-zh); font-size:2.2vw; line-height:1.2; margin-top:1.2vh">雙軌品牌的<br>持續強化</div>
+          <div class="stat-note" style="margin-top:1.8vh; font-size:max(13px,1.02vw); line-height:1.7">
+            在 B2B 精品供應角色之外，持續投資 HOSOO 自有品牌的空間敘事（旗艦店、Gallery、Residence），用「品牌體驗」鞏固 B2B 合作關係難以複製的議價能力與溢價空間。
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div>傳承 · 生態系 · 品牌</div>
+    <div>Act IV · 三項提案</div>
+  </div>
+</section>
+
+<!-- ============================================================
+     P15 · AI 衝擊與回應 · light
+     ============================================================ -->
+<section class="slide light" data-animate="directional">
+  <div class="chrome">
+    <div>HOSOO · 現代化因應</div>
+    <div>Act IV · 15 / 16</div>
+  </div>
+  <div class="frame" style="padding-top:4vh">
+    <div class="kicker" data-anim>06 西陣織的存亡危機：AI 與自動化的衝擊</div>
+    <h2 class="h-xl" style="font-size:4.2vw; margin-bottom:3.5vh" data-anim>危機與回應</h2>
+
+    <div class="grid-2-6-6" style="gap:4.5vw">
+      <!-- 左：産業現況數據 -->
+      <div data-anim="left" style="padding:2.8vh 2.2vw; border-left:3px solid currentColor">
+        <div class="kicker" style="opacity:.9; margin-bottom:1.8vh">産業現況：數字說話</div>
+        <ul style="padding-left:0; display:flex; flex-direction:column; gap:2vh; list-style:none">
+          <li style="font-family:var(--sans-zh); font-size:max(13px,1.05vw); line-height:1.65">職人從1980年代 <strong>8萬人</strong>，萎縮至現在約 <strong>1.5萬人</strong>，縮減超過 <strong>80%</strong></li>
+          <li style="font-family:var(--sans-zh); font-size:max(13px,1.05vw); line-height:1.65">現有職人中 <strong>60歲以上佔絕大多數</strong>，30歲以下不足10%</li>
+          <li style="font-family:var(--sans-zh); font-size:max(13px,1.05vw); line-height:1.65">部分工序（整経・製紋）已出現「<strong>全日本只剩1-2人會做</strong>」的危機</li>
+          <li style="font-family:var(--sans-zh); font-size:max(13px,1.05vw); line-height:1.65">自動化提花織機可取代部分紋樣輸入，但 <strong>染色・張力調整・品質判斷</strong> 仍高度仰賴人的感官</li>
+          <li style="font-family:var(--sans-zh); font-size:max(13px,1.05vw); line-height:1.65">AI 影像辨識可協助紋樣設計，但「<strong>這個紋樣是否有靈魂</strong>」的美學判斷無法被演算法取代</li>
+        </ul>
+      </div>
+
+      <!-- 右：HOSOO 的回應策略 -->
+      <div data-anim="right" style="padding:2.8vh 2.2vw; border-left:3px solid currentColor">
+        <div class="kicker" style="opacity:.9; margin-bottom:1.8vh">HOSOO 的回應策略</div>
+        <ul style="padding-left:0; display:flex; flex-direction:column; gap:2vh; list-style:none">
+          <li style="font-family:var(--sans-zh); font-size:max(13px,1.05vw); line-height:1.65">積極招募 <strong>20-30代年輕職人</strong>（目前約25人），以實際待遇與國際品牌合作的榮譽感作為吸引力</li>
+          <li style="font-family:var(--sans-zh); font-size:max(13px,1.05vw); line-height:1.65">與 <strong>MIT 媒體實驗室</strong>合作，以動作捕捉記錄熟練職人的手部動作，探索數位技術如何輔助傳承</li>
+          <li style="font-family:var(--sans-zh); font-size:max(13px,1.05vw); line-height:1.65"><strong>GO ON 聯盟</strong>的集體發聲，讓傳統工藝議題獲得媒體與政策層面更高的關注度</li>
+          <li style="font-family:var(--sans-zh); font-size:max(13px,1.05vw); line-height:1.65">核心立場：自動化可以做「<strong>重複性</strong>」的工序，但西陣織最珍貴的是「<strong>不重複的判斷</strong>」</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div>老師傅凋零 · AI 無法取代的那些東西</div>
+    <div>Act IV · 危機與回應</div>
+  </div>
+</section>
+
+<!-- ============================================================
+     P16 · 收束 · hero dark
+     ============================================================ -->
+<section class="slide hero dark" data-animate="quote">
+  <div class="chrome">
+    <div>HOSOO · 結語</div>
+    <div>16 / 16</div>
+  </div>
+  <div class="frame" style="display:grid; gap:5vh; align-content:center; min-height:80vh">
+    <div class="kicker" data-anim>The Core Insight · 核心洞察</div>
+    <blockquote style="font-family:var(--serif-zh); font-weight:600; font-size:4.2vw; line-height:1.3; max-width:74vw">
+      <span data-anim="line" style="display:block">「自動化可以做『重複性』的工序，</span>
+      <span data-anim="line" style="display:block">但西陣織最珍貴的是</span>
+      <span data-anim="line" style="display:block; font-style:italic">『不重複的判斷』。」</span>
+    </blockquote>
+    <p class="lead" style="max-width:58vw; opacity:.68" data-anim>
+      每匹布的張力、每次染色的條件都略有不同。這個即時判斷是無法預先編程的——這，才是 HOSOO 的核心護城河。
+    </p>
+    <div class="meta-row" data-anim>
+      <span>細尾 真孝</span><span>·</span>
+      <span>第12代・HOSOO</span><span>·</span>
+      <span>1688 — Present</span>
+    </div>
+  </div>
+  <div class="foot">
+    <div>西陣織産業轉型案例 · EMBA 報告</div>
+    <div>HOSOO · 2026</div>
+  </div>
+</section>
+
+
+</div>
+
+<div id="nav"></div>
+
+<script>
+/* =============== WebGL 双背景 ===============
+   深色页：Holographic Dispersion（全息色散 · 钛金暗流）—— 彩虹微扰、鼠标径向涟漪
+   浅色页：Spiral Vortex（旋转涡流 · 银色珍珠）—— domain-warp 流动、无中心
+   修改风格请参考 references/webgl-backgrounds.md
+*/
+const VS = `attribute vec2 position;void main(){gl_Position=vec4(position,0.0,1.0);}`;
+
+const FS_DARK = `precision highp float;
+uniform vec2 u_resolution;uniform float u_time;uniform vec2 u_mouse;
+vec3 palette(float t,vec3 a,vec3 b,vec3 c,vec3 d){return a+b*cos(6.28318*(c*t+d));}
+void main(){
+  vec2 uv=gl_FragCoord.xy/u_resolution.xy;
+  vec2 p=uv*2.0-1.0;p.x*=u_resolution.x/u_resolution.y;
+  vec2 m=u_mouse*2.0-1.0;m.x*=u_resolution.x/u_resolution.y;
+  float md=length(p-m);
+  float mr=sin(md*15.0-u_time*4.0)*exp(-md*3.0);p+=mr*0.08;
+  vec2 p0=p;
+  for(float i=1.0;i<4.0;i++){
+    p.x+=0.1/i*sin(i*3.0*p.y+u_time*0.4)+0.05;
+    p.y+=0.1/i*cos(i*2.0*p.x+u_time*0.3)-0.05;
+  }
+  float r=length(p);float ang=atan(p.y,p.x);
+  vec3 a=vec3(0.12,0.12,0.13);
+  vec3 b=vec3(0.03,0.04,0.05);
+  vec3 c=vec3(1.0,1.0,1.0);
+  vec3 d=vec3(0.1,0.2,0.4);
+  vec3 col=palette(r*1.5+p0.x*0.5+u_time*0.1,a,b,c,d);
+  float disp=sin(r*25.0-u_time*1.5+ang*2.0)*0.5+0.5;
+  col+=vec3(disp*0.015,disp*0.01,disp*0.02);
+  float hi=pow(sin(p.x*4.0+p.y*3.0+u_time)*0.5+0.5,8.0);
+  col+=hi*0.08;
+  vec3 base=vec3(0.05,0.05,0.06);
+  col=mix(base,col,0.85);
+  gl_FragColor=vec4(col,1.0);
+}`;
+
+const FS_LIGHT = `precision highp float;
+uniform vec2 u_resolution;uniform float u_time;uniform vec2 u_mouse;
+float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float noise(vec2 p){
+  vec2 i=floor(p),f=fract(p);
+  float a=hash(i),b=hash(i+vec2(1,0));
+  float c=hash(i+vec2(0,1)),d=hash(i+vec2(1,1));
+  vec2 u=f*f*(3.0-2.0*f);
+  return mix(a,b,u.x)+(c-a)*u.y*(1.0-u.x)+(d-b)*u.x*u.y;
+}
+float fbm(vec2 p){
+  float v=0.0,a=0.5;
+  mat2 m=mat2(0.80,0.60,-0.60,0.80);
+  for(int i=0;i<5;i++){v+=a*noise(p);p=m*p*2.02;a*=0.5;}
+  return v;
+}
+void main(){
+  vec2 uv=gl_FragCoord.xy/u_resolution.xy;
+  vec2 p=uv;p.x*=u_resolution.x/u_resolution.y;
+  vec2 m=u_mouse;m.x*=u_resolution.x/u_resolution.y;
+  vec2 md=p-m;float dl=length(md);
+  p+=normalize(md+vec2(0.0001))*exp(-dl*5.0)*0.03;
+  vec2 q=vec2(fbm(p*1.8+u_time*0.07),fbm(p*1.8+vec2(5.2,1.3)+u_time*0.06));
+  vec2 r=vec2(fbm(p*2.0+q*1.3+vec2(1.7,9.2)+u_time*0.05),
+              fbm(p*2.0+q*1.3+vec2(8.3,2.8)+u_time*0.04));
+  float f=fbm(p*2.2+r*1.5);
+  vec3 silverDark=vec3(0.86,0.85,0.84);
+  vec3 paper=vec3(0.955,0.945,0.925);
+  vec3 col=mix(silverDark,paper,f);
+  float ph=r.x*2.2+u_time*0.35;
+  col+=vec3(0.78,0.62,0.92)*sin(ph)*0.055;
+  col+=vec3(0.55,0.72,0.95)*sin(ph*0.8+2.0)*0.05;
+  float hl=smoothstep(0.48,0.92,f);
+  col+=hl*0.06;
+  gl_FragColor=vec4(col,1.0);
+}`;
+
+const mouse={x:0.5,y:0.5};
+addEventListener('mousemove',e=>{mouse.x=e.clientX/innerWidth;mouse.y=e.clientY/innerHeight});
+
+function bootGL(canvasId, fsSrc){
+  const canvas=document.getElementById(canvasId);
+  const gl=canvas.getContext('webgl',{alpha:false,antialias:true});
+  if(!gl) return ()=>false;
+  const mk=(t,s)=>{const sh=gl.createShader(t);gl.shaderSource(sh,s);gl.compileShader(sh);return sh};
+  const prog=gl.createProgram();
+  gl.attachShader(prog,mk(gl.VERTEX_SHADER,VS));
+  gl.attachShader(prog,mk(gl.FRAGMENT_SHADER,fsSrc));
+  gl.linkProgram(prog);gl.useProgram(prog);
+  const buf=gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);
+  const pos=gl.getAttribLocation(prog,'position');
+  gl.enableVertexAttribArray(pos);gl.vertexAttribPointer(pos,2,gl.FLOAT,false,0,0);
+  const lRes=gl.getUniformLocation(prog,'u_resolution');
+  const lT=gl.getUniformLocation(prog,'u_time');
+  const lM=gl.getUniformLocation(prog,'u_mouse');
+  const resize=()=>{
+    const d=Math.min(window.devicePixelRatio||1,2);
+    canvas.width=innerWidth*d;canvas.height=innerHeight*d;
+    gl.viewport(0,0,canvas.width,canvas.height);
+  };
+  addEventListener('resize',resize);resize();
+  return (tSec)=>{
+    gl.uniform2f(lRes,canvas.width,canvas.height);
+    gl.uniform1f(lT,tSec);
+    gl.uniform2f(lM,mouse.x,1-mouse.y);
+    gl.drawArrays(gl.TRIANGLES,0,6);
+    return true;
+  };
+}
+let drawDark=null, drawLight=null, glRAF=0, glT0=Date.now();
+function startGL(){
+  if(window.__lowPowerMode || glRAF) return;
+  if(!drawDark) drawDark=bootGL('bg-dark',FS_DARK);
+  if(!drawLight) drawLight=bootGL('bg-light',FS_LIGHT);
+  glT0=Date.now();
+  function loop(){
+    if(window.__lowPowerMode){glRAF=0;return;}
+    const t=(Date.now()-glT0)/1000;
+    drawDark(t);drawLight(t);
+    glRAF=requestAnimationFrame(loop);
+  }
+  glRAF=requestAnimationFrame(loop);
+}
+function stopGL(){
+  if(glRAF) cancelAnimationFrame(glRAF);
+  glRAF=0;
+}
+startGL();
+addEventListener('ppt-low-power-change', e=>{e.detail.on ? stopGL() : startGL();});
+
+// =============== 导航（翻页 / 圆点 / 键盘 / 滚轮 / 触屏） ===============
+const deck=document.getElementById('deck');
+const slides=deck.querySelectorAll('.slide');
+const nav=document.getElementById('nav');
+let idx=0,total=slides.length,lock=false;
+
+// 关键：矫正 deck 宽度为 total * 100vw，否则翻页会错位
+deck.style.width=(total*100)+'vw';
+
+slides.forEach((s,i)=>{
+  const b=document.createElement('button');
+  b.className='dot';b.dataset.i=i;b.setAttribute('aria-label','Page '+(i+1));
+  b.onclick=()=>go(i);
+  nav.appendChild(b);
+});
+
+function go(n){
+  if(lock)return;
+  idx=Math.max(0,Math.min(total-1,n));
+  window.__currentSlideIndex = idx;
+  deck.style.transform=`translateX(${-idx*100}vw)`;
+  nav.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active',i===idx));
+  /* 主题切换：优先读 data-theme，其次从 class（light/dark）推断 */
+  const el=slides[idx];
+  const th=el.dataset.theme || (el.classList.contains('light')?'light':(el.classList.contains('dark')?'dark':'dark'));
+  document.body.classList.toggle('light-bg',th==='light');
+  /* 动效：翻页过渡中段触发当前页的入场动画（由 motion-boot 注册） */
+  if(window.__playSlide) setTimeout(()=>window.__playSlide(idx), 450);
+  lock=true;setTimeout(()=>lock=false,700);
+}
+
+/* =============== ESC 索引视图 =============== */
+let overviewOn=false;
+const ov=document.createElement('div');
+ov.id='overview';
+ov.style.cssText='position:fixed;inset:0;z-index:100;background:rgba(var(--ink-rgb),.92);backdrop-filter:blur(12px);display:none;overflow-y:auto;padding:4vh 4vw';
+document.body.appendChild(ov);
+
+function buildOverview(){
+  ov.innerHTML='';
+  const grid=document.createElement('div');
+  grid.style.cssText='display:grid;grid-template-columns:repeat(4,1fr);gap:2vh 1.6vw;max-width:90vw;margin:0 auto';
+  slides.forEach((s,i)=>{
+    const card=document.createElement('div');
+    card.style.cssText='cursor:pointer;border-radius:6px;overflow:hidden;border:2px solid '+(i===idx?'rgba(var(--paper-rgb),.8)':'rgba(var(--paper-rgb),.15)')+';transition:border-color .2s';
+    card.onmouseenter=()=>card.style.borderColor='rgba(var(--paper-rgb),.6)';
+    card.onmouseleave=()=>card.style.borderColor=i===idx?'rgba(var(--paper-rgb),.8)':'rgba(var(--paper-rgb),.15)';
+    const wrap=document.createElement('div');
+    wrap.style.cssText='width:100%;aspect-ratio:16/9;overflow:hidden;position:relative;pointer-events:none;background:'+(s.classList.contains('light')?'var(--paper)':'var(--ink)');
+    const clone=s.cloneNode(true);
+    clone.style.cssText='width:100vw;height:100vh;transform:scale('+(1/4.5)+');transform-origin:top left;position:absolute;top:0;left:0;pointer-events:none';
+    wrap.appendChild(clone);
+    const label=document.createElement('div');
+    label.style.cssText='padding:6px 10px;font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--paper);opacity:.7';
+    label.textContent=(i+1)+' / '+total;
+    card.appendChild(wrap);
+    card.appendChild(label);
+    card.onclick=()=>{toggleOverview();go(i)};
+    grid.appendChild(card);
+  });
+  ov.appendChild(grid);
+}
+
+function toggleOverview(){
+  overviewOn=!overviewOn;
+  if(overviewOn){buildOverview();ov.style.display='block';}
+  else{ov.style.display='none';}
+}
+
+addEventListener('keydown',e=>{
+  if(e.key==='Escape'){e.preventDefault();toggleOverview();return;}
+  if(e.key && e.key.toLowerCase()==='b' && !e.metaKey && !e.ctrlKey && !e.altKey){
+    e.preventDefault();
+    window.__setLowPowerMode(!window.__lowPowerMode);
+    return;
+  }
+  if(overviewOn)return;
+  if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' '||e.key==='ArrowDown'){
+    if(window.__pipeAdvance && window.__pipeAdvance()) return;
+    go(idx+1);
+    return;
+  }
+  if(e.key==='ArrowLeft'||e.key==='PageUp'||e.key==='ArrowUp')go(idx-1);
+  if(e.key==='Home')go(0);
+  if(e.key==='End')go(total-1);
+});
+
+let wheelTO=null,wheelAcc=0;
+addEventListener('wheel',e=>{
+  wheelAcc+=e.deltaY+e.deltaX;
+  if(Math.abs(wheelAcc)>50){
+    if(wheelAcc>0 && window.__pipeAdvance && window.__pipeAdvance()){
+      wheelAcc=0;
+    }else{
+      go(idx+(wheelAcc>0?1:-1));wheelAcc=0;
+    }
+  }
+  clearTimeout(wheelTO);wheelTO=setTimeout(()=>wheelAcc=0,150);
+},{passive:true});
+
+let tx=0,ty=0;
+addEventListener('touchstart',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY},{passive:true});
+addEventListener('touchend',e=>{
+  const dx=(e.changedTouches[0].clientX-tx);
+  const dy=(e.changedTouches[0].clientY-ty);
+  if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)){
+    if(dx<0 && window.__pipeAdvance && window.__pipeAdvance()) return;
+    go(idx+(dx<0?1:-1));
+  }
+},{passive:true});
+
+go(0);
+</script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
+
+<!-- ============ Motion One 动效引擎（本地优先,CDN 兜底） ============
+     加载策略:先 ./assets/motion.min.js(本地,离线可用),失败 fallback 到 jsDelivr CDN
+     加载完成后挂 window.__playSlide / window.__pipeAdvance,
+     导航脚本会在翻页中段调用 __playSlide(idx),键盘/滚轮/触屏会在翻页前调用 __pipeAdvance()
+     双双失败时会兜底把所有 [data-anim] 设为可见,不让动效破坏阅读
+-->
+<script type="module">
+let motion;
+try {
+  motion = await import('./assets/motion.min.js');
+} catch(e1) {
+  try {
+    motion = await import('https://cdn.jsdelivr.net/npm/motion@11.11.17/+esm');
+  } catch(e2) {
+    console.warn('[motion] local + CDN both failed, disabling animations', e1, e2);
+    document.querySelectorAll('[data-anim]').forEach(el=>{el.style.opacity='1';el.style.transform='none'});
+    document.querySelectorAll('[data-animate="pipeline"] [data-anim]').forEach(el=>el.style.opacity='1');
+  }
+}
+
+if(motion){
+  const { animate, stagger } = motion;
+  document.body.classList.add('motion-ready');
+  const EASE = [.22, 1, .36, 1];
+  const slides = [...document.querySelectorAll('.slide')];
+  let pipeStep = -1;
+  let lastIdx = -1;
+
+  function resetAnims(slide){
+    slide.querySelectorAll('[data-anim]').forEach(el=>{
+      el.style.opacity='';
+      el.style.transform='';
+    });
+  }
+
+  function revealStatic(slide){
+    resetAnims(slide);
+    document.getAnimations?.().forEach(a=>a.cancel());
+    slide.querySelectorAll('[data-anim]').forEach(el=>{
+      el.style.opacity='1';
+      el.style.transform='none';
+    });
+  }
+
+  function playSlide(i){
+    const slide = slides[i];
+    if(!slide) return;
+    lastIdx = i;
+    const recipe = slide.dataset.animate || (slide.classList.contains('hero') ? 'hero' : 'cascade');
+
+    if(window.__lowPowerMode){
+      revealStatic(slide);
+      return;
+    }
+
+    if(recipe === 'pipeline'){
+      pipeStep = -1;
+      slide.querySelectorAll('[data-anim]').forEach(el=>{
+        el.style.opacity='0.15';
+        el.style.transform='none';
+      });
+      return;
+    }
+
+    resetAnims(slide);
+    const all = [...slide.querySelectorAll('[data-anim]')];
+    if(!all.length) return;
+
+    if(recipe === 'directional'){
+      const lefts  = all.filter(el=>el.dataset.anim==='left');
+      const divs   = all.filter(el=>el.dataset.anim==='divider');
+      const rights = all.filter(el=>el.dataset.anim==='right');
+      const others = all.filter(el=>!['left','right','divider'].includes(el.dataset.anim));
+      if(others.length) animate(others, {opacity:[0,1], y:[12,0]}, {duration:.6, delay:stagger(.1, {start:.15}), easing:EASE});
+      if(lefts.length)  animate(lefts,  {opacity:[0,1], x:[-24,0]}, {duration:.8, delay:.35, easing:EASE});
+      if(divs.length)   animate(divs,   {opacity:[0,.25]},          {duration:.5, delay:.9});
+      if(rights.length) animate(rights, {opacity:[0,1], x:[24,0]},  {duration:.8, delay:1.0, easing:EASE});
+      return;
+    }
+
+    if(recipe === 'quote'){
+      const lines = all.filter(el=>el.dataset.anim==='line');
+      const others = all.filter(el=>el.dataset.anim!=='line');
+      if(others.length) animate(others, {opacity:[0,1], y:[8,0]},    {duration:.6, delay:stagger(.12, {start:.2}), easing:EASE});
+      if(lines.length)  animate(lines,  {opacity:[.35,1], y:[10,0]}, {duration:.8, delay:stagger(.55, {start:.5}), easing:EASE});
+      return;
+    }
+
+    if(recipe === 'hero'){
+      animate(all, {opacity:[0,1], y:[14,0]}, {duration:.9, delay:stagger(.16, {start:.2}), easing:EASE});
+      return;
+    }
+
+    // default: cascade
+    animate(all, {opacity:[0,1], y:[16,0]}, {duration:.75, delay:stagger(.1, {start:.15}), easing:EASE});
+  }
+
+  function pipeAdvance(){
+    if(window.__lowPowerMode) return false;
+    const slide = slides[lastIdx];
+    if(!slide || slide.dataset.animate !== 'pipeline') return false;
+    const steps  = [...slide.querySelectorAll('[data-anim="step"]')];
+    const arrows = [...slide.querySelectorAll('[data-anim="arrow"]')];
+    if(pipeStep >= steps.length - 1) return false;
+    pipeStep++;
+    animate(steps[pipeStep], {opacity:[0.15,1], y:[8,0]}, {duration:.5, easing:EASE});
+    if(pipeStep > 0 && arrows[pipeStep-1]){
+      animate(arrows[pipeStep-1], {opacity:[0.15,.7]}, {duration:.3, delay:.15});
+    }
+    return true;
+  }
+
+  window.__playSlide = playSlide;
+  window.__pipeAdvance = pipeAdvance;
+
+  // 首屏:go(0) 已跑过(同步),没来得及触发动效 → 这里补一下
+  playSlide(0);
+}
+</script>
+</body>
+</html>
